@@ -23,7 +23,7 @@ export function htmlToMarkdown(source: string): string {
   turndown.addRule('singleLineTableCells', {
     filter: ['th', 'td'],
     replacement: (content, cell) => {
-      const inlineContent = content.replace(/[ \\t]*[\\r\\n]+[ \\t]*/g, ' ').trim()
+      const inlineContent = content.replace(/[ \t]*[\r\n]+[ \t]*/g, ' ').trim()
       return (cell.previousElementSibling ? ' ' : '| ') + inlineContent + ' |'
     }
   })
