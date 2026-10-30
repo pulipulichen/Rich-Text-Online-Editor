@@ -17,6 +17,16 @@ export function markdownToHtml(source: string): string {
 export function htmlToMarkdown(source: string): string {
   const turndown = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' })
   turndown.use(gfm)
+  // TinyMCE and imported HTML often wrap table cell contents in <p>/<div>.
+  // Turndown emits blank lines for those blocks, but GFM table rows must stay
+  // on one line. Override the GFM cell rule without affecting other paragraphs.
+  turndown.addRule('singleLineTableCells', {
+    filter: ['th', 'td'],
+    replacement: (content, cell) => {
+      const inlineContent = content.replace(/[ \\t]*[\\r\\n]+[ \\t]*/g, ' ').trim()
+      return (cell.previousElementSibling ? ' ' : '| ') + inlineContent + ' |'
+    }
+  })
   return turndown.turndown(sanitizeHtml(source)).trim() + '\n'
 }
 
