@@ -10,7 +10,7 @@ import Button from '@/components/ui/button/Button.vue'
 import { editorInit } from '@/editor/tinymce'
 import {
   downloadBlob, downloadText, fileSafeName, fullHtmlDocument,
-  htmlToMarkdown, htmlToText, markdownToHtml, markdownZip, sanitizeHtml
+  hasImages, htmlToMarkdown, htmlToText, htmlZip, ImageExportError, markdownToHtml, markdownZip, sanitizeHtml
 } from '@/services/conversion'
 import { loadDraft, saveDraft } from '@/services/storage'
 
@@ -32,6 +32,8 @@ const locales = {
     exportHtml: '下載 HTML',
     exportMd: '下載 Markdown',
     exportZip: '下載 Markdown 與圖片 ZIP',
+    exportHtmlZip: '下載 HTML 與圖片 ZIP',
+    imageExportError: '無法取得部分圖片（可能受到網站限制）。請將圖片貼入文件後重試。',
     saved: '已自動儲存',
     saving: '正在儲存…',
     unsaved: '尚未儲存',
@@ -64,6 +66,8 @@ const locales = {
     exportHtml: 'Download HTML',
     exportMd: 'Download Markdown',
     exportZip: 'Download Markdown + images ZIP',
+    exportHtmlZip: 'Download HTML + images ZIP',
+    imageExportError: 'Some images could not be downloaded. Paste them into the document and retry.',
     saved: 'Autosaved',
     saving: 'Saving…',
     unsaved: 'Not yet saved',
@@ -104,6 +108,7 @@ const openMenu = ref<'file' | 'copy' | 'export' | null>(null)
 const modal = ref<'new' | 'install' | null>(null)
 const installEvent = ref<InstallPrompt | null>(null)
 const charCount = computed(() => htmlToText(html.value).length)
+const hasDocumentImages = computed(() => hasImages(html.value))
 const displayName = computed(() => title.value.trim() || t.value.untitled)
 const editorOptions = editorInit as any
 let saveTimer: ReturnType<typeof setTimeout> | undefined
@@ -194,16 +199,20 @@ async function copyAs(kind: 'html' | 'md' | 'text'): Promise<void> {
     notify(t.value.copyDone)
   } catch (error) { console.error(error); notify(t.value.failed) }
 }
-async function exportAs(kind: 'html' | 'md' | 'zip'): Promise<void> {
+async function exportAs(kind: 'html' | 'md' | 'zip' | 'html-zip'): Promise<void> {
   closeMenus()
   busy.value = true
   try {
     const name = fileSafeName(displayName.value)
     if (kind === 'html') downloadText(fullHtmlDocument(displayName.value, html.value), name + '.html', 'text/html')
     else if (kind === 'md') downloadText(htmlToMarkdown(html.value), name + '.md', 'text/markdown')
-    else downloadBlob(await markdownZip(name, html.value), name + '.zip')
+    else if (kind === 'html-zip') downloadBlob(await htmlZip(name, html.value), name + '-html.zip')
+    else downloadBlob(await markdownZip(name, html.value), name + '-markdown.zip')
     notify(t.value.exportDone)
-  } catch (error) { console.error(error); notify(t.value.failed) }
+  } catch (error) {
+    console.error(error)
+    notify(error instanceof ImageExportError ? t.value.imageExportError : t.value.failed)
+  }
   finally { busy.value = false }
 }
 async function newDocument(): Promise<void> {
@@ -322,7 +331,8 @@ onBeforeUnmount(() => {
               <div v-if="openMenu === 'export'" class="dropdown-menu">
                 <button class="menu-item" @click="exportAs('html')"><Code2 />{{ t.exportHtml }}</button>
                 <button class="menu-item" @click="exportAs('md')"><FileText />{{ t.exportMd }}</button>
-                <button class="menu-item" @click="exportAs('zip')"><CloudDownload />{{ t.exportZip }}</button>
+                <button v-if="hasDocumentImages" class="menu-item" @click="exportAs('zip')"><CloudDownload />{{ t.exportZip }}</button>
+                <button v-if="hasDocumentImages" class="menu-item" @click="exportAs('html-zip')"><CloudDownload />{{ t.exportHtmlZip }}</button>
               </div>
             </div>
           </div>

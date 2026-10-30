@@ -7,7 +7,7 @@ A single-page **WYSIWYG** editor for HTML and Markdown, using Vue 3, TinyMCE 8 (
 - Visual editing (no Markdown syntax required): tables, lists, links, images, HTML code and fullscreen.
 - Copy HTML, Markdown (GitHub Flavored Markdown), and plain text to the clipboard.
 - Import .md, .markdown, .html, .htm, and .txt.
-- Download HTML, Markdown, and a ZIP with Markdown plus images extracted to assets/.
+- Download HTML or Markdown directly. When the document contains images, export either HTML + images ZIP or Markdown + images ZIP, with images extracted to assets/.
 - Paste, drag/drop, or choose images; images are embedded as Base64 data URLs.
 - One autosaved draft stored in browser IndexedDB; no account or backend.
 - Light/dark/system theme, Traditional Chinese and English UI.
@@ -32,7 +32,7 @@ Because this initial release has no committed package-lock.json, the workflow ru
 ## Notes
 
 - Markdown export cannot preserve every HTML-only rich text style; use HTML export for maximum formatting fidelity.
-- Base64 images can create large local drafts. Use ZIP export for a portable Markdown file plus image assets.
+- Base64 images can create large local drafts. When images exist, ZIP export uses DEFLATE compression to package an HTML or Markdown document with referenced image assets. External images must be CORS-accessible to package; if they cannot be fetched, the export reports an error instead of silently omitting them.
 - Local drafts are specific to the browser and device; clearing site data may remove them.
 - The site must be online to open or reload. Installing it does not provide offline capability.
 - TinyMCE is self-hosted under its GPL mode with license_key: 'gpl'. The project license is GPL-3.0.

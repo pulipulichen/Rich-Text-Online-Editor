@@ -49,24 +49,84 @@ export function fullHtmlDocument(title: string, body: string): string {
     '</title></head><body>' + sanitizeHtml(body) + '</body></html>'
 }
 
-export async function markdownZip(title: string, sourceHtml: string): Promise<Blob> {
+export function hasImages(sourceHtml: string): boolean {
+  const container = document.createElement('div')
+  container.innerHTML = sanitizeHtml(sourceHtml)
+  return Array.from(container.querySelectorAll('img[src]')).some(img => Boolean(img.getAttribute('src')?.trim()))
+}
+
+export class ImageExportError extends Error {
+  constructor() {
+    super('One or more document images could not be bundled into the ZIP.')
+    this.name = 'ImageExportError'
+  }
+}
+
+const imageExtensions: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+  'image/avif': 'avif',
+  'image/bmp': 'bmp',
+  'image/tiff': 'tif',
+  'image/x-icon': 'ico',
+  'image/vnd.microsoft.icon': 'ico'
+}
+
+function imageExtension(mimeType: string): string {
+  const type = mimeType.toLowerCase().split(';')[0].trim()
+  if (imageExtensions[type]) return imageExtensions[type]
+  const subtype = type.startsWith('image/') ? type.slice(6).replace(/^x-/, '').replace(/\+xml$/, '') : ''
+  return /^[a-z0-9-]+$/.test(subtype) ? subtype : 'img'
+}
+
+async function documentZip(title: string, sourceHtml: string, format: 'html' | 'md'): Promise<Blob> {
   const zip = new JSZip()
   const folder = zip.folder('assets')!
   const container = document.createElement('div')
   container.innerHTML = sanitizeHtml(sourceHtml)
+  const packed = new Map<string, string>()
   let counter = 0
-  for (const img of container.querySelectorAll('img')) {
-    const source = img.getAttribute('src') || ''
-    const match = /^data:(image\/(?:png|jpeg|gif|webp|svg\+xml));base64,([a-z0-9+/=]+)$/i.exec(source)
-    if (!match) continue
-    const ext: Record<string, string> = {
-      'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif',
-      'image/webp': 'webp', 'image/svg+xml': 'svg'
+
+  for (const img of container.querySelectorAll('img[src]')) {
+    const source = img.getAttribute('src')?.trim() || ''
+    if (!source) continue
+
+    let filename = packed.get(source)
+    if (!filename) {
+      let image: Blob
+      try {
+        // Data URLs (pasted images) and CORS-accessible URLs are both supported.
+        const response = await fetch(source)
+        if (!response.ok) throw new Error('Image fetch failed')
+        image = await response.blob()
+      } catch {
+        // Never silently create an incomplete archive when a remote image blocks CORS.
+        throw new ImageExportError()
+      }
+
+      const mimeType = image.type || /^data:(image\/[a-z0-9.+-]+)/i.exec(source)?.[1] || ''
+      if (!mimeType.toLowerCase().startsWith('image/')) throw new ImageExportError()
+      filename = 'image-' + String(++counter).padStart(3, '0') + '.' + imageExtension(mimeType)
+      folder.file(filename, image)
+      packed.set(source, filename)
     }
-    const filename = 'image-' + String(++counter).padStart(3, '0') + '.' + ext[match[1].toLowerCase()]
-    folder.file(filename, match[2], { base64: true })
     img.setAttribute('src', 'assets/' + filename)
   }
-  zip.file(fileSafeName(title) + '.md', htmlToMarkdown(container.innerHTML))
-  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+
+  const documentName = fileSafeName(title) + (format === 'html' ? '.html' : '.md')
+  zip.file(documentName, format === 'html'
+    ? fullHtmlDocument(title, container.innerHTML)
+    : htmlToMarkdown(container.innerHTML))
+  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } })
+}
+
+export async function markdownZip(title: string, sourceHtml: string): Promise<Blob> {
+  return documentZip(title, sourceHtml, 'md')
+}
+
+export async function htmlZip(title: string, sourceHtml: string): Promise<Blob> {
+  return documentZip(title, sourceHtml, 'html')
 }
