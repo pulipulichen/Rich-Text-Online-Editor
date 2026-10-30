@@ -122,6 +122,7 @@ function updateTheme(): void {
 function rotateTheme(): void {
   theme.value = theme.value === 'system' ? 'dark' : theme.value === 'dark' ? 'light' : 'system'
 }
+function onEditorInput(value: string): void { html.value = value }
 function toggleLocale(): void { locale.value = locale.value === 'zh-TW' ? 'en' : 'zh-TW' }
 function notify(message: string): void {
   feedback.value = message
@@ -304,7 +305,7 @@ onBeforeUnmount(() => {
             :model-value="html"
             :init="editorOptions"
             license-key="gpl"
-            @update:model-value="value => html = value"
+            @update:model-value="onEditorInput"
           />
           <div v-else class="flex flex-1 items-center justify-center text-slate-400">Loading editor…</div>
         </div>
