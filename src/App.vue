@@ -20,10 +20,8 @@ type InstallPrompt = Event & { prompt: () => Promise<void> }
 
 const locales = {
   'zh-TW': {
-    subtitle: '所見即所得 · Markdown / HTML',
     untitled: '未命名文件',
     placeholder: '輸入文件名稱…',
-    tip: '直接編輯、貼上圖片，不需要撰寫 Markdown 語法',
     open: '開啟檔案',
     new: '新增文件',
     copy: '複製',
@@ -51,14 +49,11 @@ const locales = {
     installHint: '若瀏覽器未提供安裝提示，可透過瀏覽器選單安裝此網站。需要網路才能開啟。',
     close: '關閉',
     theme: '切換主題',
-    language: '切換語言',
-    noOffline: '需要網路 · 無離線快取'
+    language: '切換語言'
   },
   en: {
-    subtitle: 'WYSIWYG · Markdown / HTML',
     untitled: 'Untitled document',
     placeholder: 'Name your document…',
-    tip: 'Edit visually and paste images, without writing Markdown syntax',
     open: 'Open file',
     new: 'New document',
     copy: 'Copy',
@@ -86,8 +81,7 @@ const locales = {
     installHint: 'If no install prompt is available, use your browser menu to install this website. Network is required to open it.',
     close: 'Close',
     theme: 'Change theme',
-    language: 'Change language',
-    noOffline: 'Network required · no offline cache'
+    language: 'Change language'
   }
 } as const
 
@@ -258,44 +252,39 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="app-shell">
-    <header class="site-header">
-      <div class="brand">
-        <div class="brand-mark"><BookOpenText :size="23" /></div>
-        <div class="brand-copy">
-          <div class="brand-name">Rich Text Online Editor</div>
-          <div class="brand-subtitle">{{ t.subtitle }}</div>
-        </div>
-      </div>
-      <div class="header-actions">
-        <Button size="icon" variant="ghost" :title="t.language" :aria-label="t.language" @click="toggleLocale">
-          <Languages :size="18" />
-        </Button>
-        <Button size="icon" variant="ghost" :title="t.theme" :aria-label="t.theme" @click="rotateTheme">
-          <Moon v-if="dark" :size="18" /><Sun v-else :size="18" />
-        </Button>
-        <Button size="icon" variant="ghost" title="GitHub" aria-label="GitHub" @click="windowOpenRepo">
-          <Github :size="19" />
-        </Button>
-        <div class="dropdown">
-          <Button size="icon" variant="ghost" aria-label="Menu" @click.stop="toggleMenu('file')"><MoreHorizontal :size="21" /></Button>
-          <div v-if="openMenu === 'file'" class="dropdown-menu">
-            <button class="menu-item" @click="openFilePicker"><FileUp />{{ t.open }}</button>
-            <button class="menu-item" @click="modal = 'new'; closeMenus()"><FilePlus2 />{{ t.new }}</button>
-            <div class="menu-divider"></div>
-            <button class="menu-item" @click="installApp"><Laptop />{{ t.install }}</button>
-          </div>
-        </div>
-      </div>
-    </header>
-
     <main class="workspace">
       <section class="document-card" aria-label="Document">
         <div class="doc-header">
-          <div class="min-w-0 flex-1">
+          <div class="document-heading">
+            <div class="brand">
+              <div class="brand-mark"><BookOpenText :size="17" /></div>
+              <span class="brand-name">Rich Text Online Editor</span>
+            </div>
             <input v-model="title" class="doc-title" :aria-label="t.placeholder" :placeholder="t.placeholder" maxlength="120" />
-            <p class="doc-caption">{{ t.tip }}</p>
           </div>
-          <Button size="sm" variant="outline" @click="openFilePicker"><FileUp :size="16" /> <span class="hidden sm:inline">{{ t.open }}</span></Button>
+          <div class="header-actions">
+            <Button size="sm" variant="outline" @click="openFilePicker">
+              <FileUp :size="16" /> {{ t.open }}
+            </Button>
+            <Button size="icon" variant="ghost" :title="t.language" :aria-label="t.language" @click="toggleLocale">
+              <Languages :size="18" />
+            </Button>
+            <Button size="icon" variant="ghost" :title="t.theme" :aria-label="t.theme" @click="rotateTheme">
+              <Moon v-if="dark" :size="18" /><Sun v-else :size="18" />
+            </Button>
+            <Button size="icon" variant="ghost" title="GitHub" aria-label="GitHub" @click="windowOpenRepo">
+              <Github :size="19" />
+            </Button>
+            <div class="dropdown">
+              <Button size="icon" variant="ghost" aria-label="Menu" @click.stop="toggleMenu('file')"><MoreHorizontal :size="21" /></Button>
+              <div v-if="openMenu === 'file'" class="dropdown-menu">
+                <button class="menu-item" @click="openFilePicker"><FileUp />{{ t.open }}</button>
+                <button class="menu-item" @click="modal = 'new'; closeMenus()"><FilePlus2 />{{ t.new }}</button>
+                <div class="menu-divider"></div>
+                <button class="menu-item" @click="installApp"><Laptop />{{ t.install }}</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-if="storageFailed" class="load-error" role="alert">{{ t.storageError }}</div>
@@ -340,7 +329,6 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </main>
-    <footer class="site-footer">Rich Text Online Editor · GPL-3.0 · {{ t.noOffline }}</footer>
     <input ref="fileInput" type="file" accept=".html,.htm,.md,.markdown,.txt" class="hidden" @change="openFile" />
     <div v-if="modal" class="modal-cover" @click.self="modal = null">
       <div class="modal" role="dialog" aria-modal="true">

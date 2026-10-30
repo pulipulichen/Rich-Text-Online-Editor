@@ -21,7 +21,7 @@ import DOMPurify from 'dompurify'
 import type { Editor as TinyEditor } from 'tinymce'
 
 const documentCss = [
-  'body { font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.8; max-width: 840px; margin: 30px auto; padding: 0 26px 80px; color: #17212b; }',
+  'body { box-sizing: border-box; width: 100%; font-family: Inter, system-ui, -apple-system, sans-serif; font-size: 16px; line-height: 1.8; margin: 0; padding: 24px clamp(16px, 3vw, 48px) 80px; color: #17212b; }',
   'h1,h2,h3 { font-weight: 750; line-height: 1.35; margin-top: 1.5em; }',
   'h1 { font-size: 2em; } h2 { font-size: 1.55em; } h3 { font-size: 1.22em; }',
   'img { max-width: 100%; height: auto; border-radius: 8px; }',
