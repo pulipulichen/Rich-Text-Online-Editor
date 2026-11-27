@@ -48,7 +48,7 @@ const locales = {
     cancel: '取消',
     confirm: '建立新文件',
     install: '安裝 App',
-    installHint: '請從瀏覽器選單安裝此網站。若使用 iPhone 或 iPad，可在 Safari 點「分享」→「加入主畫面」。首次連線載入完成後即可離線編輯。',
+    installHint: '請從 Chrome、Edge 等瀏覽器的網址列安裝圖示或選單安裝此網站。若使用 iPhone 或 iPad，請在 Safari 點「分享」→「加入主畫面」。本應用需要網路連線，不提供離線使用。',
     close: '關閉',
     theme: '切換主題',
     language: '切換語言'
@@ -82,7 +82,7 @@ const locales = {
     cancel: 'Cancel',
     confirm: 'Create new document',
     install: 'Install app',
-    installHint: 'Install this site from your browser menu. On iPhone or iPad, open it in Safari and choose Share → Add to Home Screen. Offline editing is available after the first successful online load.',
+    installHint: 'Install this site using the install icon or browser menu in Chrome or Edge. On iPhone or iPad, open it in Safari and choose Share → Add to Home Screen. An internet connection is required; offline use is not supported.',
     close: 'Close',
     theme: 'Change theme',
     language: 'Change language'
